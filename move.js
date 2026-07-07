@@ -1,0 +1,303 @@
+
+function isWhite(piece){
+    return piece === piece.toUpperCase();
+}
+
+function isBlack(piece){
+    return piece === piece.toLowerCase();
+}
+
+
+export function getLegalMoves(boardState, piece, row, col){
+    if(piece == "P" || piece == "p"){
+        return getPawnMoves(boardState, piece,row,col);
+    }
+    else if(piece == "R" || piece == "r"){
+        return getRukhMoves(boardState, piece, row, col);
+    }
+    else if(piece == "B" || piece == "b"){
+        return getBishopMoves(boardState, piece, row, col);
+    }
+    else if(piece == "N" || piece == "n"){
+        return getKnightMoves(boardState, piece, row, col);
+    }
+    else if(piece == "Q" || piece == "q"){
+        return getQueenMoves(boardState, piece, row, col);
+    }
+    else if(piece == "K" || piece == "k"){
+        return getKingMoves(boardState, piece, row, col);
+    }
+    return [];
+}
+
+export function getPawnMoves(boardState, piece, row, col) {
+
+    const moves = [];
+
+    const direction = isWhite(piece) ? -1 : 1;
+    const startRow = isWhite(piece) ? 6 : 1;
+
+    let newRow = row + direction;
+    let dir = [-1, 1];
+    for(let i = 0; i < 2; i++){
+        let newCol = col + dir[i];
+        if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 && isEnemy(piece, boardState[newRow][newCol])){
+            moves.push({row : newRow, col : newCol});
+        }
+    }
+
+    if (boardState[newRow][col] === "") {
+
+        moves.push({ row: newRow, col });
+
+        if (row === startRow) {
+
+            let doubleRow = row + 2 * direction;
+
+            if (boardState[doubleRow][col] === "") {
+                moves.push({ row: doubleRow, col });
+            }
+        }
+    }
+
+    return moves;
+}
+
+function isEnemy(piece, target){
+    if(piece == '' || target == '')
+            return false;
+    return (isWhite(piece) && isBlack(target) || isWhite(target) && isBlack(piece));
+}
+
+export function getRukhMoves(boardState, piece, row, col){
+    let direction = [
+        [-1,0],
+        [1,0],
+        [0,-1],
+        [0,1]
+    ]
+    let moves = [];
+
+    for(let it of direction){
+        let nrow = row + it[0];
+        let ncol = col +  it[1];
+        while(nrow >= 0 && nrow < 8 && ncol >= 0 && ncol < 8){
+            let target = boardState[nrow][ncol];
+            if(target == ''){
+                moves.push({row : nrow, col : ncol});
+            }
+            else if(isEnemy(piece, target)){
+                moves.push({row : nrow, col : ncol});
+                break;
+            }
+            else{
+                break;
+            }
+            nrow += it[0];
+            ncol += it[1];
+        }
+    }
+    return moves;
+}
+
+
+export function getBishopMoves(boardState, piece, row, col){
+    let moves = [];
+    let direction = [
+        [-1, -1],
+        [-1, 1],
+        [1, -1],
+        [1, 1]
+    ]
+
+    for(let it of direction){
+        let nRow = row + it[0];
+        let nCol = col + it[1];
+        while(nRow >= 0 && nRow < 8 && nCol >= 0 && nCol < 8){
+            if(boardState[nRow][nCol] == ''){
+                moves.push({row : nRow, col : nCol});
+            }
+            else if(isEnemy(piece, boardState[nRow][nCol])){
+                moves.push({row : nRow, col : nCol});
+                break;
+            }
+            else{
+                break;
+            }
+            nRow += it[0];
+            nCol += it[1];
+        }
+    }
+    return moves;
+}
+
+export function getKnightMoves(boardState, piece, row, col){
+    let moves = [];
+    let dx = [-1, -2, -2, -1, 1, 2, 2, 1];
+    let dy = [-2, -1, 1, 2, 2, 1, -1, -2];
+    for(let i = 0; i < 8; i++){
+        let newRow = row + dx[i];
+        let newCol = col + dy[i];
+        if(newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7){
+            if(boardState[newRow][newCol] == ''){
+                moves.push({row : newRow, col : newCol});
+            }
+            else if(isEnemy(piece, boardState[newRow][newCol])){
+                moves.push({row : newRow, col : newCol});
+            }
+        }
+    }
+    return moves;
+}
+
+export function getQueenMoves(boardState, piece, row, col){
+    let moves =  [];
+    moves = getBishopMoves(boardState, piece, row, col).concat(getRukhMoves(boardState, piece, row, col));
+    return moves;
+}
+
+export function getKingMoves(boardState, piece, row, col){
+    let moves = [];
+    let dx = [-1, -1, -1, 0, 1, 1, 1, 0];
+    let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+    for(let i = 0; i < 8; i++){
+        let newRow = row + dx[i];
+        let newCol = col + dy[i];
+        if(newRow >= 0 && newRow <= 7 && newCol >= 0 && newCol <= 7){
+            if(boardState[newRow][newCol] == ''){
+                moves.push({row : newRow, col : newCol});
+            }
+            else if(isEnemy(piece, boardState[newRow][newCol])){
+                moves.push({row : newRow, col : newCol});
+            }
+        }
+    }
+    return moves;
+}
+
+
+export function isKingInCheck(boardState, color){
+    let kingRow;
+    let kingCol;
+
+    // find the king
+    for(let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            let piece = boardState[row][col];
+            if(color == "white" && isWhite(piece) && piece == "K"){
+                kingRow = row;
+                kingCol = col;
+            }
+            if(color == "black" && isBlack(piece) && piece == "k"){
+                kingRow = row;
+                kingCol = col;
+            }
+        }
+    }
+    for(let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            let piece = boardState[row][col];
+            if(piece == '') continue;
+            if(color == "white" && isWhite(piece)) continue;
+            if(color == "black" && isBlack(piece)) continue;
+
+            if(piece == "P"){
+                let dx = [-1, -1];
+                let dy = [-1, 1];
+                for(let i = 0; i < 2; i++){
+                    let nr = row + dx[i];
+                    let nc = col + dy[i];
+                    if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8){
+                        if(nr == kingRow && nc == kingCol){
+                            return true;
+                        }
+                    }
+                }
+                continue;
+            }
+            if(piece == "p"){
+                let dx = [1, 1];
+                let dy = [-1, 1];
+                for(let i = 0; i < 2; i++){
+                    let nr = row + dx[i];
+                    let nc = col + dy[i];
+                    if(nr >= 0 && nr < 8 && nc >= 0 && nc < 8){
+                        if(nr == kingRow && nc == kingCol){
+                            return true;
+                        }
+                    }
+                }
+                continue;
+            }
+
+            if(piece == "k" || piece == "K"){
+                const dx = [-1,-1,-1,0,1,1,1,0];
+                const dy = [-1,0,1,1,1,0,-1,-1];
+                for(let i = 0; i < 8; i++){
+                    let nr = row + dx[i];
+                    let nc = col + dy[i];
+                    if(nr == kingRow && nc == kingCol){
+                        return true;
+                    }
+                }
+            }
+
+            const moves = getLegalMoves(boardState, piece, row, col);
+            if(moves.some(move =>
+                move.row == kingRow && move.col == kingCol
+            )){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function cloneBoard(boardState){
+    return boardState.map(row => [...row]);
+}
+
+export function getValidMoves(boardState, piece, row, col){
+    let testingBoard = cloneBoard(boardState);
+    let moves = [];
+    let pseudoMoves = getLegalMoves(boardState, piece, row, col);
+    for(let it of pseudoMoves){
+        const capturedPiece = testingBoard[it.row][it.col];
+        testingBoard[it.row][it.col] = piece;
+        testingBoard[row][col] = '';
+        let color = isWhite(piece)?"white":"black";
+        if(!isKingInCheck(testingBoard, color)){
+            moves.push({row : it.row, col : it.col});
+        }
+        testingBoard[it.row][it.col] = capturedPiece;
+        testingBoard[row][col] = piece;
+    }
+    return moves;
+}
+
+
+export function hasAnyValidMove(boardState, color){
+    let moves = [];
+    for(let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            let piece = boardState[row][col];
+            if(color == "black" && isBlack(piece)){
+                moves = getValidMoves(boardState, piece, row, col);
+                if(moves.length > 0){
+                    return true;
+                }
+            }
+            if(color == "white" && isWhite(piece)){
+                moves = getValidMoves(boardState, piece, row, col);
+                if(moves.length > 0){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+
+
+
