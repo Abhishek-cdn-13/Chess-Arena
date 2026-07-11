@@ -1,4 +1,4 @@
-import { getLegalMoves, getValidMoves, isKingInCheck, hasAnyValidMove } from "./move.js";
+import { getLegalMoves, getValidMoves, isKingInCheck, hasAnyValidMove, updateCastleRights, updateCastleRightsCaptured, castleRights, enPassantTarget, setEnPassantTarget } from "./move.js";
 const board = document.querySelector(".container");
 const boardState = [
     ['r','n','b','q','k','b','n','r'],
@@ -135,6 +135,47 @@ function handleSecondClick(row, col){
 function movePiece(row, col){
     let nrow = selectedPiece.row;
     let ncol = selectedPiece.col;
+    setEnPassantTarget(null);
+    const capturedPiece = boardState[row][col];
+    let piece = selectedPiece.piece;
+
+
+    updateCastleRights(boardState[nrow][ncol], nrow, ncol);
+    updateCastleRightsCaptured(capturedPiece, row, col);
+
+    if((piece == "P" || piece == "p") && Math.abs(row - nrow) == 2){
+        setEnPassantTarget({row : (row + nrow)/2, col});
+    }
+    const move = legalMoves.find(move =>
+        move.row == row && move.col == col
+    );
+
+    if(move.type == "en-passant"){
+        if(piece == "P"){
+            boardState[row + 1][col] = "";
+        }
+        else if(piece == "p"){
+            boardState[row - 1][col] = "";
+        }
+    }
+
+    if(move.type == "castle-kingside" && isWhite(piece)){
+        boardState[7][5] = boardState[7][7];
+        boardState[7][7] = "";
+    }
+    else if(move.type == "castle-queenside" && isWhite(piece)){
+        boardState[7][3] = boardState[7][0];
+        boardState[7][0] = "";
+    }
+    else if(move.type == "castle-kingside" && isBlack(piece)){
+        boardState[0][5] = boardState[0][7];
+        boardState[0][7] = "";
+    }
+    else if(move.type == "castle-queenside" && isBlack(piece)){
+        boardState[0][3] = boardState[0][0];
+        boardState[0][0] = "";
+    }
+
     boardState[row][col] = boardState[nrow][ncol];
     boardState[nrow][ncol] = '';
     selectedPiece = null;
@@ -158,3 +199,4 @@ function movePiece(row, col){
     renderBoard();
     pieceMoved = false;
 }
+
