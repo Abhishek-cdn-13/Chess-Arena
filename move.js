@@ -53,6 +53,7 @@ export function getPawnMoves(boardState, piece, row, col) {
 
     const direction = isWhite(piece) ? -1 : 1;
     const startRow = isWhite(piece) ? 6 : 1;
+    const promotionRow = isWhite(piece) ? 0 : 7;
 
     let newRow = row + direction;
     let dir = [-1, 1];
@@ -60,7 +61,12 @@ export function getPawnMoves(boardState, piece, row, col) {
         let newCol = col + dir[i];
         if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8){
             if(isEnemy(piece, boardState[newRow][newCol])){
-                moves.push({row : newRow, col : newCol, type : "normal"});
+                if(newRow == promotionRow){
+                    moves.push({row : newRow, col : newCol, type : "promotion"});
+                }
+                else{
+                    moves.push({row : newRow, col : newCol, type : "normal"});
+                }
             }
             else if(enPassantTarget && enPassantTarget.row == newRow && enPassantTarget.col == newCol){
                 moves.push({row : newRow, col : newCol, type : "en-passant"});
@@ -69,9 +75,12 @@ export function getPawnMoves(boardState, piece, row, col) {
     }
 
     if (boardState[newRow][col] === "") {
-
-        moves.push({ row: newRow, col, type : "normal"});
-
+        if(newRow == promotionRow){
+            moves.push({row : newRow, col, type : "promotion"});
+        }
+        else{
+            moves.push({row : newRow, col, type : "normal"});
+        }
         if (row === startRow) {
 
             let doubleRow = row + 2 * direction;
@@ -436,6 +445,40 @@ export function updateCastleRightsCaptured(capturePiece, row, col){
         castleRights.blackKingRook = false;
         console.log(castleRights.blackKingRook);
     }
+}
+
+
+export function isInsufficientMaterial(boardState){
+    let whitePieces = [];
+    let blackPieces = [];
+    for(let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            let piece = boardState[row][col];
+            if(piece == "") continue;
+            if(isWhite(piece)){
+                whitePieces.push(piece);
+            }
+            else{
+                blackPieces.push(piece);
+            }
+        }
+    }
+    if(whitePieces.length == 1 && blackPieces.length == 1){
+        return true;
+    }
+    else if(whitePieces.length == 2 && blackPieces.length == 1 && whitePieces.includes("B")){
+        return true;
+    }
+    else if(whitePieces.length == 1 && blackPieces.length == 2 && blackPieces.includes("b")){
+        return true;
+    }
+    else if(whitePieces.length == 2 && blackPieces.length == 1 && whitePieces.includes("N")){
+        return true;
+    }
+    else if(whitePieces.length == 1 && blackPieces.length == 2 && blackPieces.includes("n")){
+        return true;
+    }
+    return false;
 }
 
 

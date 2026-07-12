@@ -1,5 +1,9 @@
-import { getLegalMoves, getValidMoves, isKingInCheck, hasAnyValidMove, updateCastleRights, updateCastleRightsCaptured, castleRights, enPassantTarget, setEnPassantTarget } from "./move.js";
+import { getLegalMoves, getValidMoves, isKingInCheck, hasAnyValidMove, updateCastleRights,
+    updateCastleRightsCaptured, castleRights, enPassantTarget, setEnPassantTarget,
+    isInsufficientMaterial } from "./move.js";
 const board = document.querySelector(".container");
+const capturedBox_black = document.querySelector(".capturedBlack");
+const capturedBox_white = document.querySelector(".capturedWhite");
 const boardState = [
     ['r','n','b','q','k','b','n','r'],
     ['p','p','p','p','p','p','p','p'],
@@ -30,9 +34,37 @@ const pieceImages = {
 let selectedPiece = null;
 let legalMoves = [];
 let pieceMoved = false;
+let lastMove = null;
+let checkMove = null;
+let whiteCaptured = [];
+let blackCaptured = [];
 
 function renderBoard(){
+    capturedBox_black.innerHTML = "";
+    capturedBox_white.innerHTML = "";
+    capturedBox_black.classList.add("capturedBox");
+    capturedBox_white.classList.add("capturedBox");
+    
+    for(let i = 0; i < whiteCaptured.length; i++){
+        const box = document.createElement("span");
+        box.classList.add("capturePiece");
+        capturedBox_black.append(box);
+        const piece = whiteCaptured[i];
+        const img = document.createElement("img");
+        img.setAttribute("src", pieceImages[piece]);
+        box.appendChild(img);
+    }
+    for(let i = 0; i < blackCaptured.length; i++){
+        const box = document.createElement("span");
+        box.classList.add("capturePiece");
+        capturedBox_white.append(box);
+        const piece = blackCaptured[i];
+        const img = document.createElement("img");
+        img.setAttribute("src", pieceImages[piece]);
+        box.appendChild(img);
+    }
     board.innerHTML = "";
+
     for(let i = 0; i < 8; i++){
         for(let j = 0; j < 8; j++){
             const box = document.createElement("div");
@@ -62,6 +94,16 @@ function renderBoard(){
             );
             if(isLegal && !pieceMoved){
                 box.classList.add("legal-move");
+            }
+            if(lastMove){
+                if((lastMove.nrow == i && lastMove.ncol == j) || (lastMove.row == i && lastMove.col == j)){
+                    box.classList.add("last-move");
+                }
+            }
+            if(checkMove){
+                if(checkMove.row == i && checkMove.col == j){
+                    box.classList.add("check");
+                }
             }
         }
     }
@@ -131,14 +173,34 @@ function handleSecondClick(row, col){
     return ;
 }
 
+function getKingPosition(boardState, color){
+    for(let row = 0; row < 8; row++){
+        for(let col = 0; col < 8; col++){
+            let piece = boardState[row][col];
+            if(isBlack(piece) && color == "white") continue;
+            if(isWhite(piece) && color == "black") continue;
+            if(piece == "k" || piece == "K"){
+                return {row, col};
+            }
+        }
+    }
+}
 
 function movePiece(row, col){
     let nrow = selectedPiece.row;
     let ncol = selectedPiece.col;
     setEnPassantTarget(null);
     const capturedPiece = boardState[row][col];
+    if(isWhite(capturedPiece) && capturedPiece != ""){
+        blackCaptured.push(capturedPiece);
+        console.log(blackCaptured);
+    }
+    else if(isBlack(capturedPiece) && capturedPiece != ""){
+        whiteCaptured.push(capturedPiece);
+        console.log(whiteCaptured);
+    }
     let piece = selectedPiece.piece;
-
+    lastMove = {nrow, ncol, row, col};
 
     updateCastleRights(boardState[nrow][ncol], nrow, ncol);
     updateCastleRightsCaptured(capturedPiece, row, col);
@@ -178,6 +240,11 @@ function movePiece(row, col){
 
     boardState[row][col] = boardState[nrow][ncol];
     boardState[nrow][ncol] = '';
+
+    if(move.type == "promotion"){
+        boardState[row][col] = isWhite(piece) ? "Q" : "q";  
+    }
+
     selectedPiece = null;
     legalMoves = [];
     currTurn = currTurn === "white"?"black":"white";
@@ -187,14 +254,21 @@ function movePiece(row, col){
             alert("checkMate");
         }
         else{
+            checkMove = getKingPosition(boardState, currTurn);
             console.log("check");
         }
     }
     else{
+        checkMove = null;
         if(!hasAnyValidMove(boardState, currTurn)){
             alert("StaleMate");
         }
     }
+
+    if(isInsufficientMaterial(boardState)){
+        alert("Draw by insufficient material");
+    }
+
     pieceMoved = true;
     renderBoard();
     pieceMoved = false;
