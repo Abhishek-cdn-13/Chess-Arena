@@ -4,6 +4,8 @@ import { getLegalMoves, getValidMoves, isKingInCheck, hasAnyValidMove, updateCas
 const board = document.querySelector(".container");
 const capturedBox_black = document.querySelector(".capturedBlack");
 const capturedBox_white = document.querySelector(".capturedWhite");
+const gameOver = document.querySelector(".game-over-box");
+const gameOverCloseBtn = document.querySelector(".close");
 const boardState = [
     ['r','n','b','q','k','b','n','r'],
     ['p','p','p','p','p','p','p','p'],
@@ -38,6 +40,12 @@ let lastMove = null;
 let checkMove = null;
 let whiteCaptured = [];
 let blackCaptured = [];
+let moveHistory = [];
+let checkMate = false;
+
+gameOverCloseBtn.addEventListener("click", ()=>{
+    gameOver.style.display = "none";
+});
 
 function renderBoard(){
     capturedBox_black.innerHTML = "";
@@ -104,6 +112,9 @@ function renderBoard(){
                 if(checkMove.row == i && checkMove.col == j){
                     box.classList.add("check");
                 }
+            }
+            if(checkMate){
+                gameOver.style.display = "flex";
             }
         }
     }
@@ -245,13 +256,31 @@ function movePiece(row, col){
         boardState[row][col] = isWhite(piece) ? "Q" : "q";  
     }
 
+    moveHistory.push({
+        piece,
+        fromRow: nrow,
+        fromCol: ncol,
+        toRow: row,
+        toCol: col,
+
+        moveType: move.type,
+        captured: capturedPiece,
+
+        check: false,
+        checkmate: false,
+        promotion: move.type == "promotion",
+        castle:
+            move.type == "castle-kingside" ||
+            move.type == "castle-queenside"
+    });
+
     selectedPiece = null;
     legalMoves = [];
     currTurn = currTurn === "white"?"black":"white";
 
     if(isKingInCheck(boardState, currTurn)){
         if(!hasAnyValidMove(boardState, currTurn)){
-            alert("checkMate");
+            checkMate = true;
         }
         else{
             checkMove = getKingPosition(boardState, currTurn);

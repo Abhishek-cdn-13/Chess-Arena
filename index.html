@@ -5,18 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chess Arena</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <div class="main">
         <div class="playerOne">
-            <div class="profile">Abhishek</div>
-            <div class="capturedWhite capture"></div>
+            <div class="profile">
+                <span class="profile-pic">
+                    <img src="assets/user-profile.png" alt="">
+                </span>
+                <div>
+                    <span class="userNmae">Abhishek</span>
+                    <div class="capturedWhite capture"></div>
+                </div>
+            </div>
+            <div class="timer"><i class="fa-regular fa-clock"></i><span>10 : 00</span></div>
         </div>
         <div class="container"></div>
-        <div class="playerTwo">
-            <div class="profile">Komal</div>
-            <div class="capturedBlack capture"></div>
+        <div class="game-over-box hide-game-over">
+            <div class="winner-box">
+                <div class="winner">White Won</div>
+                <div>by resignation</div>
+                <i class="fa-solid fa-x close"></i>
+            </div>
+            <div class="new-match-box">
+                <button>New <span>10</span> min</button>
+                <button>Rematch</button>
+            </div>
         </div>
+
+        <div class="playerTwo">
+            <div class="profile">
+                <span class="profile-pic">
+                    <img src="assets/user-profile.png" alt="">
+                </span>
+                <div>
+                    <span class="userNmae">Abhishek</span>
+                    <div class="capturedBlack capture"></div>
+                </div>
+            </div>
+            <div class="timer"><i class="fa-regular fa-clock"></i><span>10 : 00</span></div>
+        </div>
+    </div>
+    <div class="sidebar">
+        <div class="moves"></div>
     </div>
     <script type="module" src="script.js"></script>
 </body>
